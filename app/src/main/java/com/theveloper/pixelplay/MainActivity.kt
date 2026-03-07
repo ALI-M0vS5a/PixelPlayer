@@ -22,7 +22,9 @@ import androidx.activity.viewModels
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -156,6 +158,7 @@ class MainActivity : ComponentActivity() {
 
     private val playerViewModel: PlayerViewModel by viewModels()
     private val mainViewModel: MainViewModel by viewModels()
+    private var isUIVisiblyReady = false
     private var mediaControllerFuture: ListenableFuture<MediaController>? = null
     @Inject
     lateinit var userPreferencesRepository: UserPreferencesRepository // Inject here
@@ -190,7 +193,16 @@ class MainActivity : ComponentActivity() {
 
         // Keep splash screen visible until DataStore has emitted the initial setup state,
         // preventing the blank-screen flash between splash and first frame.
-        splashScreen.setKeepOnScreenCondition { mainViewModel.isSetupComplete.value == null }
+        splashScreen.setKeepOnScreenCondition { 
+            val isSetupReady = mainViewModel.isSetupComplete.value != null
+            if (isSetupReady && !isUIVisiblyReady) {
+                // Once setup state is known, the UI starts composing.
+                // We mark it as ready slightly after composition starts to ensure
+                // the first frame is rendered before revealing.
+                isUIVisiblyReady = true
+            }
+            !isSetupReady
+        }
 
         // LEER SEÑAL DE BENCHMARK
         val isBenchmarkMode = intent.getBooleanExtra("is_benchmark", false)
@@ -253,7 +265,23 @@ class MainActivity : ComponentActivity() {
             PixelPlayTheme(
                 darkTheme = useDarkTheme
             ) {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                var contentVisible by remember { mutableStateOf(false) }
+                val contentAlpha by animateFloatAsState(
+                    targetValue = if (contentVisible) 1f else 0f,
+                    animationSpec = tween(600, easing = LinearOutSlowInEasing),
+                    label = "AppContentAlpha"
+                )
+
+                LaunchedEffect(Unit) {
+                    // Delay slightly to ensure first frame layout is done behind Splash
+                    delay(100)
+                    contentVisible = true
+                }
+
+                Surface(
+                    modifier = Modifier.fillMaxSize().graphicsLayer { alpha = contentAlpha }, 
+                    color = MaterialTheme.colorScheme.background
+                ) {
                     if (showSetupScreen != null) {
                         AnimatedContent(
                             targetState = showSetupScreen,
