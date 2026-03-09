@@ -185,20 +185,6 @@ fun SetupScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
-        setupViewModel.events.collectLatest { event ->
-            when (event) {
-                is SetupEvent.Message -> {
-                    Toast.makeText(context, event.value, Toast.LENGTH_LONG).show()
-                }
-                is SetupEvent.FinishAfterRestore -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
-                    onSetupComplete()
-                }
-            }
-        }
-    }
-
     // Re-check permissions when the screen is resumed
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -223,6 +209,33 @@ fun SetupScreen(
     var previousPageIndex by remember { mutableStateOf(0) }
 
     val directorySelectionPageIndex = remember(pages) { pages.indexOf(SetupPage.DirectorySelection) }
+    val batteryOptimizationPageIndex = remember(pages) { pages.indexOf(SetupPage.BatteryOptimization) }
+    val finishPageIndex = remember(pages) { pages.indexOf(SetupPage.Finish) }
+
+    LaunchedEffect(Unit) {
+        setupViewModel.events.collectLatest { event ->
+            when (event) {
+                is SetupEvent.Message -> {
+                    Toast.makeText(context, event.value, Toast.LENGTH_LONG).show()
+                }
+                is SetupEvent.RestoreCompleted -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+                    val targetPageIndex = when {
+                        batteryOptimizationPageIndex >= 0 && !isIgnoringBatteryOptimizationsNow(context) ->
+                            batteryOptimizationPageIndex
+                        finishPageIndex >= 0 -> finishPageIndex
+                        else -> null
+                    }
+
+                    if (targetPageIndex != null) {
+                        pagerState.animateScrollToPage(targetPageIndex)
+                    } else {
+                        onSetupComplete()
+                    }
+                }
+            }
+        }
+    }
 
     LaunchedEffect(pagerState.currentPage) {
         if (pagerState.currentPage > previousPageIndex) {
@@ -621,6 +634,11 @@ private fun hasExactAlarmPermissionNow(context: Context): Boolean {
     return alarmManager.canScheduleExactAlarms()
 }
 
+private fun isIgnoringBatteryOptimizationsNow(context: Context): Boolean {
+    val powerManager = context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+    return powerManager.isIgnoringBatteryOptimizations(context.packageName)
+}
+
 @Composable
 fun WelcomePage() {
     Column(
@@ -903,7 +921,7 @@ fun BackupRestorePage(
 
     PermissionPageLayout(
         title = "Do you have a backup?",
-        description = "If you already have a PixelPlayer backup, restore it now and skip the rest of setup on this device.",
+        description = "If you already have a PixelPlayer backup, restore it now and skip most of the remaining setup on this device.",
         buttonText = when {
             uiState.isInspectingBackup -> "Inspecting backup"
             uiState.isRestoringBackup -> "Restoring backup"

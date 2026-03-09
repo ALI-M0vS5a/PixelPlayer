@@ -61,7 +61,7 @@ data class SetupUiState(
 
 sealed interface SetupEvent {
     data class Message(val value: String) : SetupEvent
-    data class FinishAfterRestore(val message: String) : SetupEvent
+    data class RestoreCompleted(val message: String) : SetupEvent
 }
 
 @HiltViewModel
@@ -349,15 +349,13 @@ class SetupViewModel @Inject constructor(
 
             when (result) {
                 is RestoreResult.Success -> {
-                    completeSetup(syncAfter = false)
-                    _events.emit(SetupEvent.FinishAfterRestore("Backup restored successfully"))
+                    _events.emit(SetupEvent.RestoreCompleted("Backup restored successfully"))
                 }
                 is RestoreResult.PartialFailure -> {
                     val canFinishSetup = result.succeeded.isNotEmpty() || !result.rolledBack
                     if (canFinishSetup) {
-                        completeSetup(syncAfter = false)
                         _events.emit(
-                            SetupEvent.FinishAfterRestore(
+                            SetupEvent.RestoreCompleted(
                                 "Restore completed with some unresolved issues."
                             )
                         )

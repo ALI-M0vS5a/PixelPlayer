@@ -68,6 +68,10 @@ constructor(
         private val json: Json // Inyectar Json para serialización
 ) {
 
+    private val backupExcludedKeyNames = setOf(
+        PreferencesKeys.INITIAL_SETUP_DONE.name
+    )
+
     private object PreferencesKeys {
         val APP_REBRAND_DIALOG_SHOWN = booleanPreferencesKey("app_rebrand_dialog_shown")
         val ALLOWED_DIRECTORIES = stringSetPreferencesKey("allowed_directories")
@@ -1478,6 +1482,9 @@ constructor(
         val snapshot = dataStore.data.first().asMap()
         return snapshot.mapNotNull { (key, value) ->
             val keyName = key.name
+            if (keyName in backupExcludedKeyNames) {
+                return@mapNotNull null
+            }
             when (value) {
                 is String -> PreferenceBackupEntry(
                     key = keyName,
@@ -1532,6 +1539,9 @@ constructor(
             }
 
             entries.forEach { entry ->
+                if (entry.key in backupExcludedKeyNames) {
+                    return@forEach
+                }
                 when (entry.type) {
                     "string" -> {
                         val value = entry.stringValue ?: return@forEach
