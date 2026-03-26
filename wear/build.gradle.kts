@@ -58,7 +58,6 @@ dependencies {
 
     // Wear OS Compose
     implementation(libs.wear.compose.material)
-    implementation(libs.wear.compose.material3)
     implementation(libs.wear.compose.foundation)
     implementation(libs.wear.compose.navigation)
 
@@ -109,6 +108,4 @@ dependencies {
 
     // Media3 ExoPlayer (standalone local playback)
     implementation(libs.androidx.media3.exoplayer)
-    implementation(libs.androidx.media3.session)
-    implementation(libs.androidx.mediarouter)
 }
