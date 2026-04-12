@@ -2492,11 +2492,7 @@ class PlayerViewModel @Inject constructor(
         reportedPositionMs: Long
     ): Long {
         playbackStateHolder.syncCurrentPositionFromPlayer(mediaId, reportedPositionMs)
-        val resolvedPosition = playbackStateHolder.currentPosition.value
-        if (resolvedPosition != _playerUiState.value.currentPosition) {
-            _playerUiState.update { it.copy(currentPosition = resolvedPosition) }
-        }
-        return resolvedPosition
+        return playbackStateHolder.currentPosition.value
     }
 
     private fun setupMediaControllerListeners() {
@@ -2560,7 +2556,6 @@ class PlayerViewModel @Inject constructor(
                 }
                 playbackStateHolder.clearCurrentPositionHints()
                 playbackStateHolder.setCurrentPosition(0L)
-                _playerUiState.update { it.copy(currentPosition = 0L) }
                 resetPlaybackAudioMetadata()
             }
         }
@@ -2739,7 +2734,6 @@ class PlayerViewModel @Inject constructor(
                         }
                         playbackStateHolder.clearCurrentPositionHints()
                         playbackStateHolder.setCurrentPosition(0L)
-                        _playerUiState.update { it.copy(currentPosition = 0L) }
                         resetPlaybackAudioMetadata()
                     }
                 }
@@ -2887,7 +2881,6 @@ class PlayerViewModel @Inject constructor(
 
             _playerUiState.update { state ->
                 state.copy(
-                    currentPosition = 0L,
                     currentPlaybackQueue = immutableQueue,
                     currentQueueSourceName = context.getString(R.string.external_queue_label),
                     showDismissUndoBar = false,
@@ -3616,7 +3609,6 @@ class PlayerViewModel @Inject constructor(
         playbackStateHolder.setCurrentPosition(0L)
         _playerUiState.update { currentState ->
             currentState.copy(
-                currentPosition = 0L,
                 currentPlaybackQueue = currentState.currentPlaybackQueue.filter { it.id != song.id }.toImmutableList(),
                 currentQueueSourceName = ""
             )
@@ -3787,10 +3779,6 @@ class PlayerViewModel @Inject constructor(
 
     fun seekTo(position: Long) {
         playbackStateHolder.seekTo(position)
-        val resolvedPosition = playbackStateHolder.currentPosition.value
-        if (resolvedPosition != _playerUiState.value.currentPosition) {
-            _playerUiState.update { it.copy(currentPosition = resolvedPosition) }
-        }
     }
 
     fun nextSong() {
