@@ -973,9 +973,7 @@ class MusicService : MediaLibraryService() {
 
     private val playerListener = object : Player.Listener {
         override fun onVolumeChanged(volume: Float) {
-            if (engine.isTransitionRunning()) {
-                return
-            }
+            if (engine.isTransitionRunning()) return
             val expectedVolume = expectedReplayGainVolume
             if (expectedVolume != null && abs(expectedVolume - volume) < 0.001f) {
                 expectedReplayGainVolume = null
@@ -1006,12 +1004,15 @@ class MusicService : MediaLibraryService() {
                 }
                 else -> clearHeadsetReconnectResume()
             }
+            requestWidgetFullUpdate(force = true)
+            mediaSession?.let { refreshMediaSessionUi(it) }
+            schedulePlaybackSnapshotPersist()
         }
-        
+
         override fun onAvailableCommandsChanged(availableCommands: Player.Commands) {
-             val canSeek = availableCommands.contains(Player.COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM)
-             val player = engine.masterPlayer
-             Timber.tag(TAG).w("onAvailableCommandsChanged. Can Seek Command? $canSeek. IsSeekable? ${player.isCurrentMediaItemSeekable}. Duration: ${player.duration}")
+            val canSeek = availableCommands.contains(Player.COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM)
+            val player = engine.masterPlayer
+            Timber.tag(TAG).w("onAvailableCommandsChanged. Can Seek Command? $canSeek. IsSeekable? ${player.isCurrentMediaItemSeekable}. Duration: ${player.duration}")
         }
 
         override fun onPlaybackStateChanged(playbackState: Int) {
@@ -1028,7 +1029,19 @@ class MusicService : MediaLibraryService() {
             schedulePlaybackSnapshotPersist(immediate = timeline.isEmpty)
         }
 
-        override fun onMediaItemTransition(item: MediaItem?, reason: Int) {
+        override fun onPositionDiscontinuity(
+            oldPosition: Player.PositionInfo,
+            newPosition: Player.PositionInfo,
+            reason: Int
+        ) {
+            if (reason == Player.DISCONTINUITY_REASON_AUTO_TRANSITION ||
+                reason == Player.DISCONTINUITY_REASON_SEEK
+            ) {
+                applyReplayGain(mediaSession?.player?.currentMediaItem)
+            }
+        }
+
+        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             val eotTargetSongId = endOfTrackTimerSongId
             if (!eotTargetSongId.isNullOrBlank()) {
                 if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) {
@@ -1045,11 +1058,12 @@ class MusicService : MediaLibraryService() {
                         engine.masterPlayer.pause()
                         Timber.tag(TAG).d("Paused playback at end of track from Wear timer")
                     }
-                } else if (item?.mediaId != eotTargetSongId) {
+                } else if (mediaItem?.mediaId != eotTargetSongId) {
                     endOfTrackTimerSongId = null
                     Timber.tag(TAG).d("Cleared end-of-track timer after manual track change")
                 }
             }
+            applyReplayGain(mediaSession?.player?.currentMediaItem)
             requestWidgetAndWearRefreshWithFollowUp()
             mediaSession?.let { refreshMediaSessionUiWithFollowUp(it) }
             schedulePlaybackSnapshotPersist()
@@ -2845,6 +2859,14 @@ class MusicService : MediaLibraryService() {
     /**
      * Bridges a suspend block into a [ListenableFuture] for Media3 callback methods.
      */
+    /**
+     * Bridges a suspend block into a [ListenableFuture] for Media3 callback methods.
+     */
+    // ... restlicher Code ...
+
+    /**
+     * Bridges a suspend block into a [ListenableFuture] for Media3 callback methods.
+     */
     private fun <T> CoroutineScope.future(block: suspend () -> T): ListenableFuture<T> {
         val future = SettableFuture.create<T>()
         launch(Dispatchers.IO) {
@@ -2856,5 +2878,4 @@ class MusicService : MediaLibraryService() {
         }
         return future
     }
-
 }
