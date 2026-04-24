@@ -82,17 +82,17 @@
     <string name="cd_current_song_cover_art">Sampul album lagu saat ini</string>
     <string name="edit_song_crop_dialog_title">Sesuaikan sampul album Anda</string>
     <string name="edit_song_crop_dialog_hint">Cubit dan geser untuk menyesuaikan framing.</string>
-    <string name="edit_song_apply_cover_art">Terapkan sampul album</string>
+    <string name="edit_song_apply_cover_art">Terapkan</string>
     <string name="edit_song_unable_to_load_image">Tidak dapat memuat gambar yang dipilih</string>
 
     <!-- Song info bottom sheet -->
     <string name="song_info_share_chooser_title">Bagikan file lagu melalui</string>
     <string name="cd_play_song_action">Putar lagu</string>
     <string name="cd_share_song_file">Bagikan file lagu</string>
-    <string name="cd_add_to_queue">Tambahkan ke antrean</string>
+    <string name="cd_add_to_queue">Tambah ke antrean</string>
     <string name="cd_play_next_in_queue">Putar berikutnya dalam antrean</string>
-    <string name="cd_add_to_playlist">Tambahkan ke playlist</string>
-    <string name="action_add_to_queue">Tambahkan ke antrean</string>
+    <string name="cd_add_to_playlist">Tambah ke playlist</string>
+    <string name="action_add_to_queue">Tambah ke antrean</string>
     <string name="action_queue_next">Berikutnya</string>
     <string name="song_info_checking_watch">Memeriksa jam tangan</string>
     <string name="song_info_transferring_percent">Mentransfer %1$d%%</string>

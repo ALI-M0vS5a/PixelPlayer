@@ -75,7 +75,7 @@
     <string name="presentation_batch_f_smart_rule_recently_played_subtitle">Lagu yang terakhir Anda dengarkan.</string>
     <string name="presentation_batch_f_smart_rule_forgotten_favorites_title">Favorit yang Terlupakan</string>
     <string name="presentation_batch_f_smart_rule_forgotten_favorites_subtitle">Trek favorit yang sudah lama tidak Anda putar.</string>
-    <string name="presentation_batch_f_smart_rule_new_gems_title">Permata Baru</string>
+    <string name="presentation_batch_f_smart_rule_new_gems_title">Temuan Baru</string>
     <string name="presentation_batch_f_smart_rule_new_gems_subtitle">Trek yang baru saja ditambahkan dengan jumlah putaran rendah.</string>
 
     <!-- Palette style -->
