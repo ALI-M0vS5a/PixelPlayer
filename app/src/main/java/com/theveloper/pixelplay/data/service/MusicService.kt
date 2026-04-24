@@ -2868,7 +2868,6 @@ class MusicService : MediaLibraryService() {
     /**
      * Bridges a suspend block into a [ListenableFuture] for Media3 callback methods.
      */
-    // ... restlicher Code ...
 
     /**
      * Bridges a suspend block into a [ListenableFuture] for Media3 callback methods.
