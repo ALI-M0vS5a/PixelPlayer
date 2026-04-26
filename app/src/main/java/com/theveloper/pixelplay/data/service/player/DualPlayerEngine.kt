@@ -1016,7 +1016,11 @@ class DualPlayerEngine @Inject constructor(
             val volIn = envelope(progress, settings.curveIn)  // Incoming (Now A): 0 → 1
             val volOut = 1f - envelope(progress, settings.curveOut) // Outgoing (Now B): 1 → 0
 
-            playerA.volume = volIn
+            // Scale fade-in by the incoming track's ReplayGain target volume so the fade
+            // goes from 0 → RG-volume instead of 0 → 1.0, eliminating the audible jump
+            // at the end of the crossfade when the RG volume is applied.
+            val incomingTarget = incomingTrackReplayGainVolume ?: 1f
+            playerA.volume = (volIn * incomingTarget).coerceIn(0f, 1f)
             // Scale fade-out by the outgoing track's starting volume so a ReplayGain-adjusted
             // track (e.g. 0.75) fades from 0.75 → 0 instead of jumping to 1.0 first.
             playerB.volume = (volOut * outgoingStartVolume).coerceIn(0f, 1f)
