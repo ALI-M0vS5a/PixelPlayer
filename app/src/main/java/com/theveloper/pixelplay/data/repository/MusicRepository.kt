@@ -357,4 +357,13 @@ interface MusicRepository {
      * sessions where `Song.id` is a non-numeric source-specific string.
      */
     suspend fun getSongIdByContentUri(contentUri: String): Long?
+
+    /**
+     * Enqueues an incremental SyncWorker run with [androidx.work.ExistingWorkPolicy.KEEP].
+     * Use from finally blocks of Telegram ingestion flows to guarantee the unified-table
+     * sync happens even when an exception bypasses the normal end-of-flow
+     * [saveTelegramChannel] call. KEEP avoids cancelling a full/rebuild that may be
+     * in progress under the same unique work name.
+     */
+    fun requestTelegramUnifiedSync()
 }

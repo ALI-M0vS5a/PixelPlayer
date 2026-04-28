@@ -630,6 +630,34 @@ fun LibraryScreen(
         }
     }
 
+    // Minimum-visible gate for the maintenance indicator. Some maintenance phases
+    // (e.g. cache cleanup with an empty cache, or cloud sync that early-exits) finish
+    // in tens of milliseconds, which would otherwise produce a single-frame flicker
+    // of the linear bar. We hold it visible for at least 600ms — less than the
+    // pull-to-refresh tactile minimum (900ms) since this indicator is more passive.
+    val rawMaintenanceVisible = isPerformingMaintenance && !isFetchingChanges
+    var maintenanceVisible by remember { mutableStateOf(false) }
+    var maintenanceShownAt by remember { mutableStateOf<Long?>(null) }
+    LaunchedEffect(rawMaintenanceVisible) {
+        if (rawMaintenanceVisible) {
+            if (!maintenanceVisible) {
+                maintenanceShownAt = System.currentTimeMillis()
+                maintenanceVisible = true
+            }
+        } else if (maintenanceVisible) {
+            val shownAt = maintenanceShownAt
+            val elapsed = if (shownAt != null) System.currentTimeMillis() - shownAt else 600L
+            val remaining = 600L - elapsed
+            if (remaining > 0) {
+                kotlinx.coroutines.delay(remaining)
+            }
+            // If maintenance flipped back to true during the delay this LaunchedEffect
+            // is cancelled and re-runs, so reaching this line means we should hide.
+            maintenanceVisible = false
+            maintenanceShownAt = null
+        }
+    }
+
     // P1-1: derivedStateOf ensures BackHandler only recomposes when the boolean RESULT changes,
     // not every time any individual selection state emits.
     val hasSelectionInCurrentTab by remember {
@@ -1240,9 +1268,11 @@ fun LibraryScreen(
                         // Slim background-maintenance indicator. Reports LRC scanning,
                         // album-art cache cleanup, and cloud-source syncing. AnimatedVisibility
                         // collapses the row to zero height when nothing is running so the
-                        // tab content does not shift between sync cycles.
+                        // tab content does not shift between sync cycles. Visibility is
+                        // gated on a 600ms minimum (see LaunchedEffect above) to avoid
+                        // flicker when a maintenance phase completes in a few frames.
                         LibraryMaintenanceIndicator(
-                            visible = isPerformingMaintenance && !isFetchingChanges,
+                            visible = maintenanceVisible,
                             syncManager = syncManager
                         )
 
