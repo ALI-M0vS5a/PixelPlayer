@@ -249,7 +249,7 @@ import kotlin.math.abs
 val ListExtraBottomGap = 30.dp
 val PlayerSheetCollapsedCornerRadius = 32.dp
 private const val MAX_ALBUM_MULTI_SELECTION = 6
-private const val ENABLE_FOLDERS_SOURCE_TOGGLE = false
+private const val ENABLE_FOLDERS_SOURCE_TOGGLE = true
 private const val ENABLE_FOLDERS_STORAGE_FILTER = false
 private const val FOLDER_NAVIGATION_ROOT_KEY = "__folder_root__"
 private const val FOLDER_NAVIGATION_FORWARD = 1
