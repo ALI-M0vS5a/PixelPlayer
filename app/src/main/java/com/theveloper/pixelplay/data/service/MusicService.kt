@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.graphics.Bitmap
 import android.media.AudioDeviceCallback
 import android.media.AudioDeviceInfo
@@ -15,6 +16,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import androidx.core.app.NotificationCompat
+import androidx.core.app.ServiceCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.state.updateAppWidgetState
@@ -300,15 +302,17 @@ class MusicService : MediaLibraryService() {
             }
         }
 
-        super.onCreate()
-
-        // A MEDIA_BUTTON broadcast starts the foreground-service timeout before
-        // MusicService reaches onStartCommand(). Promote as early as possible so
-        // cold-start initialization cannot consume the whole timeout window.
+        // A MEDIA_BUTTON broadcast starts the 5-second foreground-service timeout
+        // BEFORE MusicService is created. Promote to foreground before super.onCreate()
+        // — Hilt injection plus MediaLibraryService.onCreate() can otherwise consume
+        // most of the budget on a slow cold-start. The temporary notification only uses
+        // Context/resources, no injected fields, so it is safe before super.onCreate().
         temporaryForegroundStartedInOnCreate = consumePendingMediaButtonForegroundStart()
         if (temporaryForegroundStartedInOnCreate) {
             startTemporaryForegroundForCommand()
         }
+
+        super.onCreate()
         
         // Ensure engine is ready (re-initialize if service was restarted)
         engine.initialize()
@@ -882,8 +886,20 @@ class MusicService : MediaLibraryService() {
             .setSilent(true)
             .setOngoing(true)
             .build()
+        // Pass mediaPlayback explicitly. On API 34+ a missing/mismatched type can throw
+        // MissingForegroundServiceTypeException; ServiceCompat picks the right overload
+        // per API level and matches the manifest-declared foregroundServiceType.
         try {
-            startForeground(NOTIFICATION_ID, notification)
+            ServiceCompat.startForeground(
+                this,
+                NOTIFICATION_ID,
+                notification,
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+                } else {
+                    0
+                }
+            )
         } catch (e: Exception) {
             Timber.tag(TAG).w(e, "Failed to promote service to foreground for external command")
         }
