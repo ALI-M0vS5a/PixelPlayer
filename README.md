@@ -208,5 +208,8 @@ Portions contributed before 2026-05-12 remain available under the MIT License; s
 
 <p align="center">
   Made with ❤️ by <a href="https://github.com/theovilardo">theovilardo</a>
+</p>
+<p align="center">
   Logo designed by <a href="https://aureal.dev">Aureal</a>.
 </p>
+
