@@ -1,7 +1,7 @@
 # PixelPlayer 🎵
 
 <p align="center">
-  <img src="assets/PixelPlayer.svg" alt="App Icon" height="400"/>
+  <img src="assets/PixelPlayer.svg" alt="App Icon" height="250"/>
 </p>
 <p align="center">
 <a href="https://trendshift.io/repositories/15551" target="_blank"><img src="https://trendshift.io/api/badge/repositories/15551" alt="PixelPlayerHQ%2FPixelPlayer | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
